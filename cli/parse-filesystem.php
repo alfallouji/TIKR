@@ -44,7 +44,7 @@ if ($displayHelp) {
 }
 
 $fileFormats = array('doc', 'docx', 'pdf');
-$tikaPath = __DIR__ . '/../../tika/tika-app.jar';
+$tikaPath = __DIR__ . '/../apps/tika/tika-app.jar';
 
 $source = realpath($source);
 $cacheFolder = realpath($cacheFolder);
