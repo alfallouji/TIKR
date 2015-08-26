@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_FOLDER=`dirname "$0"`
-cd $SCRIPT_FOLDER
+cd $SCRIPT_FOLDER/../
 CURRENT_FOLDER=`pwd`
 
 echo $CURRENT_FOLDER
