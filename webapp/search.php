@@ -19,19 +19,7 @@ $params = array('q' => $q, 'start' => $start, 'rows' => $rows, 'f' => $f);
 $pagination = null;
 
 // Facets definition
-$facets['params']['limit'] = 99999;
-$facets['fields'][] = array('field' => 'contentType');
-$facets['fields'][] = array('field' => 'applicationName');
-$facets['fields'][] = array('field' => 'company');
-$facets['fields'][] = array('field' => 'author');
-$facets['fields'][] = array('field' => 'customTags');
-$facets['fields'][] = array('field' => 'fingerprint', 'minCount' => 2);
-
-$facets['date'] = array('start' => '2000-01-01T01:01:01Z', 'end' => 'NOW', 'gap' => '%2B6MONTH');
-$facets['date']['fields'] = array('creationDate');
-$facets['range'] = array('start' => 0, 'end' => 1024 * 1024 * 16, 'gap' => 1024 * 256);
-$facets['range']['fields'] = array('contentLength');
-$facets['stats']['field'] = 'contentLength';
+$facets = $config['facets'];
 
 // Execute search if a query is passed
 if ($q) {
@@ -75,7 +63,7 @@ if ($q) {
   <body style="padding:20px;" id="body">
     <h1><a href="?q=*:*">Tikr::Content Discovery</a></h1>
     <form class="form-inline" action="?" method="get">
-        <input class="form-control" style="width:800px;" type="text" name="q" id="q" value="<?php echo htmlentities($q); ?>" />
+        <input class="form-control" style="width:80%;min-width:300px;" type="text" name="q" id="q" value="<?php echo htmlentities($q); ?>" />
         <input class="btn btn-default" type="submit" />
     </form>
     <br/>
