@@ -3,12 +3,11 @@
  * View a specific file
  */
 $config = require __DIR__ . '/../conf/webapp/configuration.php';
-
-require __DIR__ . '/../common/Tikr/Solr/Client.php';
-$solr = new \Tikr\Solr\Client($config['solrUrl']);
 $id = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
 
 if ($id) {
+    require __DIR__ . '/../common/Tikr/Solr/Client.php';
+    $solr = new \Tikr\Solr\Client($config['solrUrl']);
     $q = 'solrDocumentId:' . $id;
     $result = $solr->search($q);
 
