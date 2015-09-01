@@ -1,0 +1,13 @@
+{
+    "name": "alfallouji/tikr",
+    "description": "Tikr allows to structure unstructured information assets.",
+    "authors": [
+        {
+            "name": "Bashar",
+            "email": "alfallouji@gmail.com"
+        }
+    ],
+    "require": {
+        "alchemyai/alchemyapi_php":"*"
+	}
+}

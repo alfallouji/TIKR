@@ -7,10 +7,12 @@ namespace Tikr\Parser;
 abstract class Base {
     protected $_tikaPath = '/var/www/tika-app.jar';
     protected $_solr = null;
+    protected $_tme = null;
     protected $_cacheFolder = null;
     protected $_fileFormats = array();
     protected $_manifestFolder = null;
-
+    protected $_manifests = array();
+    
     /** 
      * Mapping between tika and solr indexes
      */
@@ -62,11 +64,12 @@ abstract class Base {
         'xmpTPgNPages' => 'xmpTPg:NPages',
     );
 
-    public function __construct(\Tikr\Solr\Client $solr, array $fileFormats, $cacheFolder, $manifestFolder, $tikaPath) {
+    public function __construct(\Tikr\Solr\Client $solr, array $fileFormats, $cacheFolder, $manifestFolder, $tikaPath, $tme) {
         $this->_solr = $solr;
         $this->_fileFormats = $fileFormats;
         $this->_cacheFolder = $cacheFolder;
         $this->_manifestFolder = $manifestFolder;
         $this->_tikaPath = $tikaPath;
+        $this->_tme = $tme;
     }
 }

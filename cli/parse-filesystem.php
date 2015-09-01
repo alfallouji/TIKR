@@ -2,6 +2,8 @@
 /** 
  * Scan/Index filesystem implementation
  */
+$start = microtime(true);
+
 $help = <<<EOT
 
 Tikr - Parse folder or file, extract metadata and index into solr
@@ -10,6 +12,7 @@ Usage: {$_SERVER['_']} {$_SERVER['argv'][0]} OPTIONS
 
     --generateManifest          Generate the manifest file(s)
     --allowAll                  Allow all formats
+    --mineText                  Do text mining on content
     --help                      Display this help
 
     --source=FOLDER1|FILE1      Folder or file to scan
@@ -23,28 +26,34 @@ Example: {$_SERVER['_']} {$_SERVER['argv'][0]} --allowAll --source=/media/share1
 
 EOT;
 
+require __DIR__ . '/../common/Tikr/TextMining/Alchemy.php';
 require __DIR__ . '/../common/Tikr/Parser/Base.php';
 require __DIR__ . '/../common/Tikr/Parser/Filesystem.php';
 require __DIR__ . '/../common/Tikr/Solr/Client.php';
+$config = require __DIR__ . '/../conf/cli/configuration.php';
 
 // Script options 
-$opts = array('help', 'allowAll', 'generateManifest', 'source::', 'cacheFolder::', 'solrUrl::', 'customTags::', 'manifestFolder::',);
+$opts = array('help', 'allowAll', 'mineText', 'generateManifest', 'source::', 'cacheFolder::', 'solrUrl::', 'customTags::', 'manifestFolder::',);
 $options = getopt('', $opts);
-$allowAll = isset($options['allowAll']) ? true : false;
-$generateManifest = isset($options['generateManifest']) ? true : false;
+$allowAll = isset($options['allowAll']);
+$generateManifest = isset($options['generateManifest']);
+$mineText = isset($options['mineText']);
 $source = isset($options['source']) ? $options['source'] : __DIR__ . '/../../documents/';
 $cacheFolder = isset($options['cacheFolder']) ? $options['cacheFolder'] : __DIR__ . '/../../cache/';
 $manifestFolder = isset($options['manifestFolder']) ? $options['manifestFolder'] : __DIR__ . '/../../documents/manifest/';
 $customTags = isset($options['customTags']) ? explode(',', $options['customTags']) : array();
-$solrUrl = isset($options['solrUrl']) ? $options['solrUrl'] : 'http://localhost:8983/solr/origin';
-$displayHelp = isset($options['help']) ? true : false;
+$solrUrl = isset($options['solrUrl']) ? $options['solrUrl'] : $config['solrUrl'];
+$displayHelp = isset($options['help']);
+
+$fileFormats = array('doc', 'docx', 'pdf');
+$tikaPath = __DIR__ . '/../../tika/tika-app.jar';
 
 if ($displayHelp) {
     die($help);
 }
 
-$fileFormats = array('doc', 'docx', 'pdf');
-$tikaPath = __DIR__ . '/../apps/tika/tika-app.jar';
+echo PHP_EOL . PHP_EOL . str_pad('', 90, '-') . PHP_EOL;
+echo 'Tikr - Filesystem parser' . PHP_EOL . PHP_EOL;
 
 $source = realpath($source);
 $cacheFolder = realpath($cacheFolder);
@@ -54,9 +63,7 @@ if (empty($source)) {
     echo 'Missing source parameter' . PHP_EOL;
 }
 
-echo 'Tikr - Filesystem parser' . PHP_EOL;
-echo str_pad('', 90, '-') . PHP_EOL;
-
+echo 'Options' . PHP_EOL . str_pad('', 90, '-') . PHP_EOL;
 $isFile = is_file($source) && !is_dir($source);
 
 if ($isFile) {
@@ -76,15 +83,19 @@ if ($allowAll) {
 if (!empty($customTags)) {
     echo PHP_EOL . 'Custom tags: ' . $options['customTags'];
 }
-echo PHP_EOL . str_pad('', 90, '-') . PHP_EOL;
+echo PHP_EOL . PHP_EOL . 'Processing' . PHP_EOL . str_pad('', 90, '-') . PHP_EOL;
 
 // Start parsing
 $solr = new Tikr\Solr\Client($solrUrl);
-$parser = new Tikr\Parser\Filesystem($solr, $fileFormats, $cacheFolder, $manifestFolder, $tikaPath);
+$tme = new Tikr\TextMining\Alchemy($config['tme']['alchemyApi']);
+
+$parser = new Tikr\Parser\Filesystem($solr, $fileFormats, $cacheFolder, $manifestFolder, $tikaPath, $tme);
 if ($generateManifest) {
     $parser->generateManifest($source, $allowAll);
 } elseif ($isFile) {
-    $parser->processFile($source, $customTags);
+    $parser->processFile($source, $customTags, $mineText);
 } else { 
-    $parser->processFolder($source, $allowAll, $customTags);
+    $parser->processFolder($source, $allowAll, $customTags, $mineText);
 }
+
+echo 'Execution time : ' . number_format((microtime(true) - $start), 2) . ' seconds' . PHP_EOL . PHP_EOL;

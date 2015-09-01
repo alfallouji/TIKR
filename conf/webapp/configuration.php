@@ -25,7 +25,6 @@ $facets['stats']['field'] = 'contentLength';
 
 // Return config settings
 return array(
-
     'solrUrl' => 'http://localhost:8983/solr/origin',
     'facets' => $facets,
 );

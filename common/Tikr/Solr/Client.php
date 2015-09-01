@@ -147,9 +147,14 @@ class Client
         }
 
         $streamBody .= '</delete>';
-
         $params = array('stream.body' => $streamBody);
-        return $this->sendPostData($url, $params);
+       
+        if ($this->sendPostData($url, $params)) 
+        {
+            return $this->commit();
+        }
+
+        return false;
     }
 
     /**
@@ -160,9 +165,11 @@ class Client
     public function commit()
     {
         $url = $this->host . DIRECTORY_SEPARATOR . 'update';
-        $params = array('stream.body' => '<commit optimize="true"/>');
+        $params = array('stream.body' => '<commit/>');
 
         $result = $this->sendPostData($url, $params);
+
+        return $result;
     }
 
     /** 
@@ -218,7 +225,7 @@ class Client
         // file_get_contents will return false if Solr is down
         $result =  file_get_contents($url, false, $stream);
 
-	return $result;
+    	return $result;
     }
 
     /**
