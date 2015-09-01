@@ -18,7 +18,7 @@ $docs = array();
 $params = array('q' => $q, 'start' => $start, 'rows' => $rows, 'f' => $f);
 $pagination = null;
 
-// Facets definition
+// Facets definition (refer to conf/webapp/configuration.php)
 $facets = $config['facets'];
 
 // Execute search if a query is passed

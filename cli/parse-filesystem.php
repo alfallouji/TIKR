@@ -11,6 +11,7 @@ Tikr - Parse folder or file, extract metadata and index into solr
 Usage: {$_SERVER['_']} {$_SERVER['argv'][0]} OPTIONS
 
     --generateManifest          Generate the manifest file(s)
+    --ignoreManifest            Perform a full scan/re-index (ignores manifest files)
     --allowAll                  Allow all formats
     --mineText                  Do text mining on content
     --help                      Display this help
@@ -33,10 +34,11 @@ require __DIR__ . '/../common/Tikr/Solr/Client.php';
 $config = require __DIR__ . '/../conf/cli/configuration.php';
 
 // Script options 
-$opts = array('help', 'allowAll', 'mineText', 'generateManifest', 'source::', 'cacheFolder::', 'solrUrl::', 'customTags::', 'manifestFolder::',);
+$opts = array('help', 'allowAll', 'mineText', 'generateManifest', 'ignoreManifest', 'source::', 'cacheFolder::', 'solrUrl::', 'customTags::', 'manifestFolder::',);
 $options = getopt('', $opts);
 $allowAll = isset($options['allowAll']);
 $generateManifest = isset($options['generateManifest']);
+$ignoreManifest = isset($options['ignoreManifest']);
 $mineText = isset($options['mineText']);
 $source = isset($options['source']) ? $options['source'] : __DIR__ . '/../../documents/';
 $cacheFolder = isset($options['cacheFolder']) ? $options['cacheFolder'] : __DIR__ . '/../../cache/';
@@ -83,6 +85,10 @@ if ($allowAll) {
 if (!empty($customTags)) {
     echo PHP_EOL . 'Custom tags: ' . $options['customTags'];
 }
+
+echo PHP_EOL . 'Ignore manifest: ';
+echo $ignoreManifest ? 'Yes' : 'No';
+
 echo PHP_EOL . PHP_EOL . 'Processing' . PHP_EOL . str_pad('', 90, '-') . PHP_EOL;
 
 // Start parsing
@@ -95,7 +101,7 @@ if ($generateManifest) {
 } elseif ($isFile) {
     $parser->processFile($source, $customTags, $mineText);
 } else { 
-    $parser->processFolder($source, $allowAll, $customTags, $mineText);
+    $parser->processFolder($source, $allowAll, $customTags, $mineText, $ignoreManifest);
 }
 
 echo 'Execution time : ' . number_format((microtime(true) - $start), 2) . ' seconds' . PHP_EOL . PHP_EOL;

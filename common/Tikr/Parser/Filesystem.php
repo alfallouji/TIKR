@@ -40,7 +40,7 @@ class Filesystem extends Base {
         }
     }
 
-    public function processFolder($folder, $allowAll = false, $customTags = array(), $mineText = false) {
+    public function processFolder($folder, $allowAll = false, $customTags = array(), $mineText = false, $ignoreManifest = false) {
         $result = array();
         $deindexed = $ignored = $notChanged = $error = $processed = 0;
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($folder));
@@ -52,7 +52,7 @@ class Filesystem extends Base {
                 } elseif (!$allowAll && !in_array(strtolower($info->getExtension()), $this->_fileFormats)) {
                     echo '[FORMAT-IGNORED] ' . $filename . PHP_EOL;
                     ++$ignored;
-                } elseif ($info->isFile() && $this->hasBeenProcessed($filename)) {
+                } elseif (!$ignoreManifest && $info->isFile() && $this->hasBeenProcessed($filename)) {
                     echo '[NO-CHANGE] ' . $filename . PHP_EOL;
                     $dirName = dirname($filename);
                     $baseName = basename($filename);
