@@ -128,6 +128,7 @@ class Filesystem extends Base {
         $object->solrDocumentId = md5($data['filename']);
         $object->customTags = $customTags;
         $object->fingerprint = $this->generateFingerprint($data['filename']);
+        $object->contentLength = filesize($filename);
 
         if ($mineText) {
             $text = $this->getText($filename);
@@ -186,7 +187,8 @@ class Filesystem extends Base {
 
     protected function getTikaMetadata($filename) {
         $metadata = null;
-        $cmd = 'java -jar ' . $this->_tikaPath . ' --json "' . $filename . '"';
+        $this->_tikaUrl = 'http://127.0.0.1:9998/meta';
+        $cmd = 'curl -H "Accept: application/json" -T "' . $filename . '" ' . $this->_tikaUrl . ' -s';
         exec($cmd, $output);
         $tika = implode('', $output);
         $tika = json_decode($tika, true);
