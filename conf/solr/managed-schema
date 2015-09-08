@@ -400,21 +400,21 @@
   <field name="_text_" type="text_general" multiValued="true" indexed="true" stored="false"/>
   <field name="_version_" type="long" indexed="true" stored="true"/>
   <field name="applicationName" type="string" multiValued="false" indexed="true" stored="true"/>
-  <field name="author" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="author" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="characterCount" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="comment" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="comments" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="company" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="contentLength" type="int" multiValued="false" indexed="true" stored="true"/>
-  <field name="contentType" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="contentType" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="content_encoding" type="strings"/>
   <field name="content_type" type="strings"/>
   <field name="cpRevision" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="cpSubject" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="creationDate" type="date" multiValued="false" indexed="true" stored="true"/>
-  <field name="creator" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="creator" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="date" type="date" multiValued="false" indexed="true" stored="true"/>
-  <field name="dcCreator" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="dcCreator" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="dcSubject" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="dcTitle" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="dctermsCreated" type="date" multiValued="false" indexed="true" stored="true"/>
@@ -428,11 +428,11 @@
   <field name="lastModified" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="lastPrinted" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="lastSaveDate" type="date" multiValued="false" indexed="true" stored="true"/>
-  <field name="metaAuthor" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="metaAuthor" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="metaCharacterCount" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="metaCreationDate" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="metaKeyword" type="text_general" multiValued="false" indexed="true" stored="true"/>
-  <field name="metaLastAuthor" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="metaLastAuthor" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="metaPageCount" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="metaPrintDate" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="metaSaveDate" type="date" multiValued="false" indexed="true" stored="true"/>
@@ -440,7 +440,7 @@
   <field name="modified" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="pageCount" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="resourceName" type="text_general" multiValued="false" indexed="true" stored="true"/>
-  <field name="revisionNumber" type="int" multiValued="false" indexed="true" stored="true"/>
+  <field name="revisionNumber" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="solrDocumentId" type="string" indexed="true" required="true" stored="true"/>
   <field name="stream_content_type" type="strings"/>
   <field name="stream_size" type="tlongs"/>

@@ -13,7 +13,9 @@ if ($id) {
 
     if (isset($result['response']['docs'][0])) {
         $file = $result['response']['docs'][0]['filename']; 
-        header('Content-Type: ' . $result['response']['docs'][0]['contentType']);
+
+        $contentType = is_array($result['response']['docs'][0]['contentType']) ? $result['response']['docs'][0]['contentType'][0] : $result['response']['docs']['contentType'];
+        header('Content-Type: ' . $contentType);
         header('Content-Description: File Transfer');
         header('Content-Disposition: attachment; filename=' . basename($file));
         header('Expires: 0');

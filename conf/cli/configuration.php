@@ -5,7 +5,7 @@
 
 // Return config settings
 return array(
-    'solrUrl' => 'http://localhost:8983/solr/origin',
+    'solrUrl' => 'http://127.0.0.1:8983/solr/origin',
     
     'tme' => array(
         'alchemyApi' => '',
