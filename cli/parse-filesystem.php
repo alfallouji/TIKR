@@ -17,7 +17,8 @@ Usage: {$_SERVER['_']} {$_SERVER['argv'][0]} OPTIONS
     --help                      Display this help
 
     --source=FOLDER1|FILE1      Folder or file to scan
-    --solrUrl=URL               URL to the solr core (used by Tikr)
+    --solrUrl=URL               URL to the solr core webservice (used by Tikr)
+    --tikaUrl=URL               URL to the Tika webservice
     --manifestFolder=FOLDER2    Folder where manifest(s) will be stored
     --customTags                Comma separated tags to be added to the customTags index in Tikr
     --cacheFolder=FOLDER3       Cache folder -- not implemented yet
@@ -31,10 +32,23 @@ require __DIR__ . '/../common/Tikr/TextMining/Alchemy.php';
 require __DIR__ . '/../common/Tikr/Parser/Base.php';
 require __DIR__ . '/../common/Tikr/Parser/Filesystem.php';
 require __DIR__ . '/../common/Tikr/Solr/Client.php';
+require __DIR__ . '/../common/Tikr/Tika/Client/Rest.php';
 $config = require __DIR__ . '/../conf/cli/configuration.php';
 
 // Script options 
-$opts = array('help', 'allowAll', 'mineText', 'generateManifest', 'ignoreManifest', 'source::', 'cacheFolder::', 'solrUrl::', 'customTags::', 'manifestFolder::',);
+$opts = array(
+    'help', 
+    'allowAll', 
+    'mineText', 
+    'generateManifest', 
+    'ignoreManifest', 
+    'source::', 
+    'cacheFolder::', 
+    'solrUrl::', 
+    'customTags::', 
+    'manifestFolder::',
+);
+
 $options = getopt('', $opts);
 $allowAll = isset($options['allowAll']);
 $generateManifest = isset($options['generateManifest']);
@@ -45,6 +59,7 @@ $cacheFolder = isset($options['cacheFolder']) ? $options['cacheFolder'] : __DIR_
 $manifestFolder = isset($options['manifestFolder']) ? $options['manifestFolder'] : __DIR__ . '/../../documents/manifest/';
 $customTags = isset($options['customTags']) ? explode(',', $options['customTags']) : array();
 $solrUrl = isset($options['solrUrl']) ? $options['solrUrl'] : $config['solrUrl'];
+$tikaUrl = isset($options['tikaUrl']) ? $options['tikaUrl'] : $config['tikaUrl'];
 $displayHelp = isset($options['help']);
 
 $fileFormats = array('doc', 'docx', 'pdf');
@@ -94,8 +109,9 @@ echo PHP_EOL . PHP_EOL . 'Processing' . PHP_EOL . str_pad('', 90, '-') . PHP_EOL
 // Start parsing
 $solr = new Tikr\Solr\Client($solrUrl);
 $tme = new Tikr\TextMining\Alchemy($config['tme']['alchemyApi']);
+$metadataExtractor = new Tikr\Tika\Client\Rest($tikaUrl);
 
-$parser = new Tikr\Parser\Filesystem($solr, $fileFormats, $cacheFolder, $manifestFolder, $tikaPath, $tme);
+$parser = new Tikr\Parser\Filesystem($solr, $tme, $metadataExtractor, $fileFormats, $cacheFolder, $manifestFolder, $tikaPath);
 if ($generateManifest) {
     $parser->generateManifest($source, $allowAll);
 } elseif ($isFile) {

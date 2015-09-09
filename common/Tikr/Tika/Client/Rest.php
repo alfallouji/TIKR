@@ -1,12 +1,38 @@
 <?php
-
 namespace Tikr\Tika\Client;
 
 class Rest
 {
-    public function __construct($endpoint) 
+    protected $_tikaUrl = null;
+
+    public function __construct($tikaUrl)
     {
+        $this->_tikaUrl = $tikaUrl;
     }
 
-    public function 
+    public function getMetadata($filename) 
+    {
+        $metadata = null;
+        $cmd = 'curl -H "Accept: application/json" -T "' . $filename . '" ' . $this->_tikaUrl . ' -s';
+        exec($cmd, $output);
+        $tika = implode('', $output);
+        $tika = json_decode($tika, true);
+
+        // create cache
+        $result = array(
+            'filename' => $filename, 
+            'metadata' => $tika
+        );
+
+        return $result;
+    }
+
+    public function getText($filename) {
+        // @todo
+        $metadata = null;
+        $cmd = 'java -jar ' . $this->_tikaPath . ' -t "' . $filename . '"';
+        exec($cmd, $output);
+    
+        return implode('', $output);
+    }
 }

@@ -9,45 +9,17 @@ namespace Tikr\Parser;
  */
 class Filesystem extends Base {
     /**
-     * Process all folders and generate manifests
+     * Process folder
      * 
-     * @param string $folder Folder to parse
-     * @param boolean $allowAll Allow all formats or not
-     * 
+     * @param string $folder Folder to process
+     * @param boolean $allowAll Allow all formats
+     * @param array $customTags Custom tags to use when indexing to Solr
+     * @param boolean $mineText Perform text mining or not
+     * @param boolean $ignoreManifest Ignore manifest or not (do full re-index)
+     *
      * @return void
      */
-    public function generateManifest($result) {
-        foreach ($result as $subdir => $files) {
-            $folder = $this->_manifestFolder . $subdir;
-            if (!is_dir($folder)) {
-                mkdir($folder, 0775, true);
-            }
-            $content = '<?php ' . PHP_EOL . ' // Generated at ' . date('Y-m-d H:i:s') . PHP_EOL . 'return ' . var_export($files, true) . ';';
-            file_put_contents($folder . DIRECTORY_SEPARATOR . 'manifest.php', $content);
-            echo 'Manifest generated/updated : ' . $folder . DIRECTORY_SEPARATOR . 'manifest.php' . PHP_EOL;
-        }
-    }
-
-    public function removeDocuments($result, $filename) {
-        $deindexed = 0;
-        // Remove file that are not in the manifest file
-        foreach ($result as $subdir => $currentFiles) {
-            $previousFiles = $this->loadManifest($subdir);
-            $diffFiles = array_diff(array_keys($previousFiles), array_keys($currentFiles));
-            foreach ($diffFiles as $file) {
-                $filename = $subdir . DIRECTORY_SEPARATOR . $file;
-                $md5 = md5($filename);
-                echo '[DE-INDEX] ' . $filename . ' (' . $md5 . ')' . PHP_EOL;
-                $this->_solr->deindex($md5);
-                ++$deindexed;
-            }
-        }
-
-        return $deindexed;
-    }
-
     public function processFolder($folder, $allowAll = false, $customTags = array(), $mineText = false, $ignoreManifest = false) {
-        $previousDirName = null;
         $result = array();
         $deindexed = $ignored = $notChanged = $error = $processed = 0;
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($folder));
@@ -71,24 +43,20 @@ class Filesystem extends Base {
                         $baseName = basename($filename);
                         $result[$dirName][$baseName] = $this->generateWeakFingerprint($filename);
                         ++$processed;
+                        $this->generateManifest(array($dirName => array_merge(array($filename), $this->_manifests[$dirName])));
                     } else { 
                         echo '[ERROR] ' . $filename . PHP_EOL;
                         $this->removeCacheFile($filename);
                         ++$error;
                     }
                 }
-                
-                if ($previousDirName && $previousDirName != $dirName) {
-                    $this->generateManifest($result);
-                    $deindexed += $this->removeDocuments($result, $filename);
-                    $result = array();
-                }
-                $previousDirName = $dirName;
             } catch (\Exception $e) {
                 $this->removeCacheFile($filename);
                 echo '[EXCEPTION] ' . $e->getMessage() . PHP_EOL;
             }
         }
+
+        $deindexed += $this->removeDocuments($result, $filename);
 
         echo PHP_EOL . 'Summary' . PHP_EOL; 
         echo str_pad('', 90, '-');
@@ -99,21 +67,30 @@ class Filesystem extends Base {
         echo 'Added/Updated : ' . $processed . ' file(s)' . PHP_EOL;
     }
 
+    /**
+     * Process a file
+     * 
+     * @param string $filename File to process
+     * @param array $customTags Custom tags to use when indexing to Solr
+     * @param boolean $mineText Perform text mining or not
+     *
+     * @return void
+     */
     public function processFile($filename, $customTags = array(), $mineText = false) {
         $start = microtime(true);
         echo '[PROCESSING] ' . $filename;
         $tmpFilename = $this->createCacheFile($filename);
         echo ' .';
-        $data = $this->getTikaMetadata($tmpFilename);
-        echo empty($data['tika']) ? 'X' : '.';
+        $data = $this->_metadataExtractor->getMetadata($tmpFilename);
+        echo empty($data['metadata']) ? 'X' : '.';
 
         $object = new \StdClass();
         foreach ($this->_fieldsMapping as $k1 => $k2) {
-            if (isset($data['tika'][$k2])) {
-                if (is_array($data['tika'][$k2])) {
-                    $object->$k1 = array_unique($data['tika'][$k2]);
+            if (isset($data['metadata'][$k2])) {
+                if (is_array($data['metadata'][$k2])) {
+                    $object->$k1 = array_unique($data['metadata'][$k2]);
                 } else {
-                    $object->$k1 = $data['tika'][$k2];
+                    $object->$k1 = $data['metadata'][$k2];
                 }
             } 
         }
@@ -152,77 +129,138 @@ class Filesystem extends Base {
         return $result;
     }
 
+    /**
+     * Generate manifest file
+     * 
+     * @param array $result Contains the folders and files for the manifest
+     * 
+     * @return void
+     */
+    public function generateManifest($result) {
+        foreach ($result as $subdir => $files) {
+            $folder = $this->_manifestFolder . $subdir;
+            if (!is_dir($folder)) {
+                mkdir($folder, 0775, true);
+            }
+            $content = '<?php ' . PHP_EOL . ' // Generated at ' . date('Y-m-d H:i:s') . PHP_EOL . 'return ' . var_export($files, true) . ';';
+            file_put_contents($folder . DIRECTORY_SEPARATOR . 'manifest.php', $content);
+            echo 'Manifest generated/updated : ' . $folder . DIRECTORY_SEPARATOR . 'manifest.php' . PHP_EOL;
+        }
+    }
+
+    /**
+     * Identify and remove deleted files
+     * 
+     * @param array $result Contains the folders and files that got processed
+     * @param string $filename Name of the file
+     * 
+     * @return int Number of files that got removed
+     */
+    public function removeDocuments($result, $filename) {
+        $deindexed = 0;
+        // Remove file that are not in the manifest file
+        foreach ($result as $subdir => $currentFiles) {
+            $previousFiles = $this->getManifest($subdir);
+            $diffFiles = array_diff(array_keys($previousFiles), array_keys($currentFiles));
+            foreach ($diffFiles as $file) {
+                $filename = $subdir . DIRECTORY_SEPARATOR . $file;
+                $md5 = md5($filename);
+                echo '[DE-INDEX] ' . $filename . ' (' . $md5 . ')' . PHP_EOL;
+                $this->_solr->deindex($md5);
+                ++$deindexed;
+            }
+        }
+
+        return $deindexed;
+    }
+
+    /**
+     * Has the file already been processed (look at manifest)
+     * 
+     * @param string $filenae Name of the file
+     * 
+     * @return boolean True if that's the case, false otherwise
+     */
     protected function hasBeenProcessed($filename) {
-        $manifest = $this->getManifest($filename);
+        $manifest = $this->getManifest(dirname($filename));
         $baseName = basename($filename);
-        $result = isset($manifest[$baseName]) && $manifest[$baseName] == $this->generateWeakFingerprint($filename); 
-
-        if (!$result) { if (isset($manifest[$baseName])) { var_dump($manifest[$baseName]); } var_dump($this->generateWeakFingerprint($filename)); } 
-
-        return $result;
+ 
+        return isset($manifest[$baseName]) && $manifest[$baseName] == $this->generateWeakFingerprint($filename); 
     }
 
-    protected function getManifest($filename) {
-        $folder = dirname($filename);
-
-        return $this->loadManifest($folder);
-    }
-
-    protected function loadManifest($folder) {
+    /**
+     * Get manifest for a particular folder
+     * 
+     * @param string $folder Name of the folder
+     * 
+     * @return array Assoc of file => weak fingerprint
+     */
+    protected function getManifest($folder) {
         $manifestFilename = $this->_manifestFolder . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . 'manifest.php';
-        if (!array_key_exists($folder, $this->_manifests) && file_exists($manifestFilename)) {
-            $this->_manifests[$folder] = require($manifestFilename);
-        } else { 
-            $this->_manifests[$folder] = array();
+        if (!array_key_exists($folder, $this->_manifests)) {
+            if (file_exists($manifestFilename)) {
+                $this->_manifests[$folder] = require($manifestFilename);
+            } else { 
+                $this->_manifests[$folder] = array();
+            }
         }
 
         return $this->_manifests[$folder];
     }
 
+    /**
+     * Generates a weak fingerprint based on some attributes of the file (does not require to read the whole file)
+     * 
+     * @param string $filename File name
+     * 
+     * @return string Weak fingerprint
+     */
     protected function generateWeakFingerprint($filename) {
-        $parts = array(filesize($filename), filectime($filename), fileinode($filename), filemtime($filename), fileowner($filename));
+        $parts = array(filesize($filename), filectime($filename), fileowner($filename));
 
         return sha1(implode('_', $parts));
     }
-
+    /**
+     * Generate a strong fingerpring based on the content of the file
+     * 
+     * @param string $filename File name
+     * 
+     * @return string Strong fingerprint
+     */
     protected function generateStrongFingerprint($filename) {
         return sha1_file($filename);
     }
-
-    protected function getText($filename) {
-        $metadata = null;
-        $cmd = 'java -jar ' . $this->_tikaPath . ' -t "' . $filename . '"';
-        exec($cmd, $output);
-    
-        return implode('', $output);
-    }
-
-    protected function getTikaMetadata($filename) {
-        $metadata = null;
-        $this->_tikaUrl = 'http://127.0.0.1:9998/meta';
-        $cmd = 'curl -H "Accept: application/json" -T "' . $filename . '" ' . $this->_tikaUrl . ' -s';
-        exec($cmd, $output);
-        $tika = implode('', $output);
-        $tika = json_decode($tika, true);
-
-        // create cache
-        $result = array(
-            'filename' => $filename, 
-            'metadata' => $metadata,
-            'tika' => $tika
-        );
-
-        return $result;
-    }
-
-    protected function mineText($filename, StdClass $object) {
+    /**
+     * Perform text mining
+     * 
+     * @param string $filename File name
+     * @param \StdClass $object Object to update
+     *
+     * @return boolean True upon success, false otherwise
+     */
+    protected function mineText($filename, \StdClass $object) {
         $metadata = $this->_tme->mineText($content);
+        // @todo
     }
 
+    /**
+     * Get cache filename
+     * 
+     * @param string $filename File name
+     * 
+     * @return string Cache filename
+     */
     protected function getCacheFilename($filename) {
         return sys_get_temp_dir() .  DIRECTORY_SEPARATOR . 'cache.' . md5($filename);
     }
 
+    /**
+     * Create cache file
+     * 
+     * @param string $filename File name
+     * 
+     * @return string Temporary filename
+     */
     protected function createCacheFile($filename) {
         $tmpFilename = $this->getCacheFilename($filename);
         file_put_contents($tmpFilename, file_get_contents($filename));
@@ -230,6 +268,13 @@ class Filesystem extends Base {
         return $tmpFilename;
     }
 
+    /**
+     * Remove cache file
+     * 
+     * @param string $filename File name
+     * 
+     * @return boolean True upon success, false otherwise
+     */
     protected function removeCacheFile($filename) {
         $tmpFilename = $this->getCacheFilename($filename);
        

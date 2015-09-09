@@ -8,6 +8,7 @@ abstract class Base {
     protected $_tikaPath = '/var/www/tika-app.jar';
     protected $_solr = null;
     protected $_tme = null;
+    protected $_metadataExtractor = null;
     protected $_cacheFolder = null;
     protected $_fileFormats = array();
     protected $_manifestFolder = null;
@@ -64,8 +65,9 @@ abstract class Base {
         'xmpTPgNPages' => 'xmpTPg:NPages',
     );
 
-    public function __construct(\Tikr\Solr\Client $solr, array $fileFormats, $cacheFolder, $manifestFolder, $tikaPath, $tme) {
+    public function __construct(\Tikr\Solr\Client $solr, $tme, $metadatExtractor, array $fileFormats, $cacheFolder, $manifestFolder, $tikaPath) {
         $this->_solr = $solr;
+        $this->_metadataExtractor = $metadatExtractor;
         $this->_fileFormats = $fileFormats;
         $this->_cacheFolder = $cacheFolder;
         $this->_manifestFolder = $manifestFolder;
