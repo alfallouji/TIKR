@@ -25,25 +25,42 @@ class Filesystem extends Base {
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($folder));
         foreach ($iterator as $info) {
             try {
+                $start = microtime(true);
                 $filename = realpath($info->__toString());
                 if (!$info->isFile()) {
                     continue;
                 } elseif (!$allowAll && !in_array(strtolower($info->getExtension()), $this->_fileFormats)) {
                     echo '[FORMAT-IGNORED] ' . $filename . PHP_EOL;
                     ++$ignored;
-                } elseif (!$ignoreManifest && $info->isFile() && $this->hasBeenProcessed($filename)) {
+                } elseif (!$ignoreManifest && $info->isFile() && $this->hasBeenProcessed($info)) {
                     echo '[NO-CHANGE] ' . $filename . PHP_EOL;
                     $dirName = dirname($filename);
                     $baseName = basename($filename);
-                    $result[$dirName][$baseName] = $this->generateWeakFingerprint($filename);
-                    ++$notChanged;
+                    // $result[$dirName][$baseName] = $this->generateWeakFingerprint($info);
+                    echo "\t\t\t[" . number_format($info->getSize() / (1024 * 1024), 2) . ' | ';
+                    echo number_format(microtime(true) - $start, 2) . ' | '; 
+                    echo number_format(memory_get_peak_usage() / (1024), 0) . 'ko';
+                    echo ']';
+                    echo PHP_EOL;
+                ++$notChanged;
                 } elseif ($info->isFile()) { 
+                    echo '[PROCESSING] ' . $filename . PHP_EOL;
+                    echo "\t\t";
                     if ($this->processFile($filename, $customTags, $mineText)) {
                         $dirName = dirname($filename);
                         $baseName = basename($filename);
-                        $result[$dirName][$baseName] = $this->generateWeakFingerprint($filename);
-                        ++$processed;
-                        $this->generateManifest(array($dirName => array_merge(array($filename), $this->_manifests[$dirName])));
+                        $result[$dirName][$baseName] = $this->generateWeakFingerprint($info);
+                        $this->_manifests[$dirName] = array_merge($this->_manifests[$dirName], array($baseName => $result[$dirName][$baseName]));
+                        $this->generateManifest(array($dirName => $this->_manifests[$dirName]));
+
+                        echo '}';
+                        echo "\t[" . number_format($info->getSize() / (1024 * 1024), 2) . ' | ';
+                        echo number_format(microtime(true) - $start, 2) . ' | '; 
+                        echo number_format(memory_get_peak_usage() / (1024), 0) . 'ko';
+                        echo ']';
+                        echo ' [OK]';
+                        echo PHP_EOL;
+                         ++$processed;
                     } else { 
                         echo '[ERROR] ' . $filename . PHP_EOL;
                         $this->removeCacheFile($filename);
@@ -77,10 +94,8 @@ class Filesystem extends Base {
      * @return void
      */
     public function processFile($filename, $customTags = array(), $mineText = false) {
-        $start = microtime(true);
-        echo '[PROCESSING] ' . $filename;
         $tmpFilename = $this->createCacheFile($filename);
-        echo ' .';
+        echo ' {.';
         $data = $this->_metadataExtractor->getMetadata($tmpFilename);
         echo empty($data['metadata']) ? 'X' : '.';
 
@@ -117,13 +132,7 @@ class Filesystem extends Base {
         }
 
         $result = $this->_solr->indexObject($object);
-        echo '. [' . number_format($object->contentLength / (1024 * 1024), 2) . ' | ';
-        echo number_format(microtime(true) - $start, 2) . ' | '; 
-        echo number_format(memory_get_peak_usage() / (1024 * 1024), 0) . 'ko';
-        echo '] ';
-        echo ($result) ? ' [OK]' : ' [FAILED]';
-        echo PHP_EOL;
-       
+        echo ($result) ? 'S' : '-S-';
         unlink($tmpFilename);
         
         return $result;
@@ -144,7 +153,7 @@ class Filesystem extends Base {
             }
             $content = '<?php ' . PHP_EOL . ' // Generated at ' . date('Y-m-d H:i:s') . PHP_EOL . 'return ' . var_export($files, true) . ';';
             file_put_contents($folder . DIRECTORY_SEPARATOR . 'manifest.php', $content);
-            echo 'Manifest generated/updated : ' . $folder . DIRECTORY_SEPARATOR . 'manifest.php' . PHP_EOL;
+            echo 'M';
         }
     }
 
@@ -177,15 +186,15 @@ class Filesystem extends Base {
     /**
      * Has the file already been processed (look at manifest)
      * 
-     * @param string $filenae Name of the file
+     * @param \FileSystemIterator $file File being processed
      * 
      * @return boolean True if that's the case, false otherwise
      */
-    protected function hasBeenProcessed($filename) {
-        $manifest = $this->getManifest(dirname($filename));
-        $baseName = basename($filename);
- 
-        return isset($manifest[$baseName]) && $manifest[$baseName] == $this->generateWeakFingerprint($filename); 
+    protected function hasBeenProcessed($file) {
+        $manifest = $this->getManifest($file->getPath());
+        $baseName = $file->getBasename();
+
+        return isset($manifest[$baseName]) && $manifest[$baseName] == $this->generateWeakFingerprint($file);
     }
 
     /**
@@ -211,17 +220,18 @@ class Filesystem extends Base {
     /**
      * Generates a weak fingerprint based on some attributes of the file (does not require to read the whole file)
      * 
-     * @param string $filename File name
+     * @param FileSystemIterator $file File object
      * 
      * @return string Weak fingerprint
      */
-    protected function generateWeakFingerprint($filename) {
-        $parts = array(filesize($filename), filectime($filename), fileowner($filename));
+    protected function generateWeakFingerprint($file) {
+        $parts = array($file->getSize(), $file->getCTime(), $file->getOwner(), $file->getMTime());
 
-        return sha1(implode('_', $parts));
+        return implode('_', $parts);
     }
+
     /**
-     * Generate a strong fingerpring based on the content of the file
+     * Generate a strong fingerprint based on the content of the file
      * 
      * @param string $filename File name
      * 

@@ -413,6 +413,7 @@
   <field name="cpSubject" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="creationDate" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="creator" type="string" multiValued="true" indexed="true" stored="true"/>
+  <field name="customTags" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="date" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="dcCreator" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="dcSubject" type="text_general" multiValued="false" indexed="true" stored="true"/>
@@ -424,6 +425,8 @@
   <field name="extendedPropertiesCompany" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="extendedPropertiesTemplate" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="filename" type="text_general" multiValued="false" indexed="true" stored="true"/>
+  <field name="fingerprint" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="id" type="strings"/>
   <field name="keywords" type="text_general" multiValued="false" indexed="true" stored="true"/>
   <field name="lastModified" type="date" multiValued="false" indexed="true" stored="true"/>
   <field name="lastPrinted" type="date" multiValued="false" indexed="true" stored="true"/>
@@ -451,9 +454,6 @@
   <field name="wordCount" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="x_parsed_by" type="strings"/>
   <field name="xmpTPgNPages" type="text_general" multiValued="false" indexed="true" stored="true"/>
-  <field name="customTags" type="string" multiValued="true" indexed="true" stored="true"/>
-  <field name="fingerprint" type="string" multiValued="false" indexed="true" stored="true"/>
-
   <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight" indexed="true" stored="true"/>
   <dynamicField name="*_descendent_path" type="descendent_path" indexed="true" stored="true"/>
   <dynamicField name="*_ancestor_path" type="ancestor_path" indexed="true" stored="true"/>

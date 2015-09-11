@@ -38,7 +38,7 @@ if ($q) {
     if ($start == 0 && $rows < $result['response']['numFound']) {
         $newParams = $params;
         $newParams['start']++;
-        $pagination = '<a href="?' . http_build_query($newParams) . '">Next</a>';
+        $pagination = '<a href="?' . http_build_query($newParams) . '#docs">Next</a>';
     }
 }
 ?>
@@ -61,8 +61,8 @@ if ($q) {
     <style>
         #body .table { margin-bottom:0px; }
         .module { } 
-        .left { float:left; width:150px; height:100%; border-right:solid thin #DDD; margin-right:20px; } 
-        .middle { float:left; }
+        .left { float:left; width:150px; height:100%; padding-top:20px; }
+        .middle { border-left:solid thin #DDD; padding-left:20px; float:left; }
     </style>
   </head>
   <body style="padding:20px;" id="body">
@@ -86,7 +86,7 @@ if ($q) {
                 $link = '<a href="?' . http_build_query($newParams) . '">[x]</a> ';
                 echo '<br/>' . $link . $k . '=' . $v;
             }
-            echo '<hr/>';
+            echo '<hr style="margin-bottom:0px;"/>';
 
             echo '<div><div class="left">';
             require(__DIR__ . '/../views/modules/left_menu.php');

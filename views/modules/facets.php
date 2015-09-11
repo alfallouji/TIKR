@@ -6,10 +6,10 @@ foreach ($facetsResult as $k => $facetResult) {
         continue;
     }
     $output .= '<div class="module">';
-    $output .= '<h3>' . $k . '<h3>';
+    $output .= '<h3 id="' . $k . '">' . $k . '<h3>';
     arsort($facetResult);
     $sum = $result['response']['numFound'];
-    $output .= '<pre><table class="table table-hover table-condensed">';
+    $output .= '<pre style="max-height:500px; overflow-y:scroll;"><table class="table table-hover table-condensed">';
     $class = 'active';
     foreach ($facetResult as $key => $value) {
         $class = ($class == 'info') ? 'active' : 'info';

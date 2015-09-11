@@ -9,14 +9,14 @@ if (!empty($facetsDate)) {
             continue;
         }
         echo '<h3>' . $k . ' <small>gap : ' . urldecode($facets['date']['gap']) . '</small></h3>';
-        echo '<pre><table class="table table-hover table-condensed">';
+        echo '<pre style="max-height:500px; overflow-y:scroll;"><table class="table table-hover table-condensed">';
         $class = 'active';
         krsort($facetDate);
         $endDate = ' till now'; 
         $sum = array_sum($facetDate);
         foreach ($facetDate as $key => $value) {
             $class = ($class == 'info') ? 'active' : 'info';
-            $url = htmlentities('?q=' . $k . ':[' . $key . ' TO ' . $key . $facets['date']['gap'] . ']');
+            $url = htmlentities('?q=' . $q . ' AND (' . $k . ':[' . $key . ' TO ' . $key . $facets['date']['gap'] . '])');
             $url .= '&' . http_build_query(array('f' => $f));
             echo '<tr class="' . $class . '"><td style="width:600px;"><a href="' . $url . '">';
             $startDate = date('Y-m-d', strtotime($key));
@@ -57,10 +57,10 @@ if (!empty($facetsDate)) {
         echo '<h3>' . $k . ' <small>gap : ' . urldecode($facets['date']['gap']) . '</small></h3>';
         echo '<pre>';
         echo '<div id="' . $uniqid . '" style="width: 100%; height:500px;"></div></pre>';       
+ 
         ?>
-
-            <script type="text/javascript">
-            google.load("visualization", "1", {packages:["corechart", "bar"]});
+        <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart", "bar"]});
         google.setOnLoadCallback(drawChart);
         function drawChart() {
             var data = google.visualization.arrayToDataTable([<?php echo implode(', ', $jsonArray); ?>]);
@@ -88,7 +88,7 @@ if (!empty($facetsRange)) {
         $gap = $facetRange['gap'];
         unset($facetRange['gap']);
         unset($facetRange['end']);
-        echo '<pre><table class="table table-hover table-condensed">';
+        echo '<pre style="max-height:500px; overflow-y:scroll;"><table class="table table-hover table-condensed">';
         $class = 'active';
         krsort($facetRange); 
 
