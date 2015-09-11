@@ -26,3 +26,9 @@ The following are needed by Tikr :
 - webserver (e.g. apache)
 - php 5.3+ (preferably use latest version)
 - java 7+
+- 
+
+## Screenshot
+
+![Alt text](https://github.com/alfallouji/SCREENS/blob/master/Tikr/screenshot.full.jpg "Full screenshot")
+
