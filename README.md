@@ -4,8 +4,14 @@ Tikr allows to structure unstructured assets.
 
 It can scan files and perform discovery and monitoring on your information assets. It consists of a stack of solr, tika and a php app & scripts.
 
+## Overview
+
 ![Alt text](https://github.com/alfallouji/SCREENS/blob/master/Tikr/overview.jpg "Overview of Tikr")
 
+
+## Connectivity 
+
+![Alt text](https://github.com/alfallouji/SCREENS/blob/master/Tikr/connectivity.jpg "Connectivity of Tikr")
 
 ## Setup
 
