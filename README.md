@@ -15,7 +15,7 @@ It can scan files and perform discovery and monitoring on your information asset
 
 ## Setup
 
-For ubuntu distribution, you can execute setup/ubuntu-setup.sh script in order to setup & configure solr and tika.
+For ubuntu distribution, you can execute setup/ubuntu-setup.sh script in order to download, setup & configure solr and tika.
 
 ## Author
 
