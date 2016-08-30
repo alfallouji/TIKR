@@ -9,5 +9,8 @@
     ],
     "require": {
         "alchemyai/alchemyapi_php":"*"
+	},
+	"autoload": {
+		"psr-0": {"Opencalais": "vendor/PHP-OpenCalais-master"}
 	}
 }

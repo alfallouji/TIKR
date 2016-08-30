@@ -327,9 +327,9 @@ class Client
 
         // With this parameter, Solr will return a PHP serialized array
         $params['wt'] = 'phps';
-
+        
         $res = $this->sendGetData($url, $params, $extraParams);
-
+        
         // If $res is false, then Solr didn't response 
         if(false === $res)
         {

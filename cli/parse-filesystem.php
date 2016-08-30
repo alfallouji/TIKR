@@ -33,6 +33,9 @@ require __DIR__ . '/../common/Tikr/Parser/Base.php';
 require __DIR__ . '/../common/Tikr/Parser/Filesystem.php';
 require __DIR__ . '/../common/Tikr/Solr/Client.php';
 require __DIR__ . '/../common/Tikr/Tika/Client/Rest.php';
+require __DIR__ . '/../common/Tikr/Helper/Type.php';
+require __DIR__ . '/../vendor/PHP-OpenCalais-master/opencalais.php';
+
 $config = require __DIR__ . '/../conf/cli/configuration.php';
 
 // Script options 
@@ -108,7 +111,7 @@ echo PHP_EOL . PHP_EOL . 'Processing' . PHP_EOL . str_pad('', 90, '-') . PHP_EOL
 
 // Start parsing
 $solr = new Tikr\Solr\Client($solrUrl);
-$tme = new Tikr\TextMining\Alchemy($config['tme']['alchemyApi']);
+$tme = new OpenCalais($config['tme']['openCalais']);
 $metadataExtractor = new Tikr\Tika\Client\Rest($tikaUrl);
 
 $parser = new Tikr\Parser\Filesystem($solr, $tme, $metadataExtractor, $fileFormats, $cacheFolder, $manifestFolder, $tikaPath);
@@ -120,4 +123,4 @@ if ($generateManifest) {
     $parser->processFolder($source, $allowAll, $customTags, $mineText, $ignoreManifest);
 }
 
-echo 'Execution time : ' . number_format((microtime(true) - $start), 2) . ' seconds' . PHP_EOL . PHP_EOL;
+echo PHP_EOL . 'Execution time : ' . number_format((microtime(true) - $start), 2) . ' seconds' . PHP_EOL . PHP_EOL;

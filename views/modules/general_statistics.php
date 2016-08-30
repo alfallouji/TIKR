@@ -13,6 +13,7 @@ foreach ($result['stats']['stats_fields'] as $k => $values) {
     );
 
     $output .= '<div class="module">';
+    $output .= '<a class="anchor" id="general_stats_' . $k . '"></a>';
     $output .= '<h3>General stats : ' . $k . '</h3>';
     $output .= '<pre><table class="table table-hover table-condensed">';
     $class = 'active';

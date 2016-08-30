@@ -6,7 +6,8 @@ foreach ($facetsResult as $k => $facetResult) {
         continue;
     }
     $output .= '<div class="module">';
-    $output .= '<h3 id="' . $k . '">' . $k . '<h3>';
+    $output .= '<a id="facet_' . $k . '" class="anchor"></a>';
+    $output .= '<h3>' . ucfirst($k) . '<h3>';
     arsort($facetResult);
     $sum = $result['response']['numFound'];
     $output .= '<pre style="max-height:500px; overflow-y:scroll;"><table class="table table-hover table-condensed">';

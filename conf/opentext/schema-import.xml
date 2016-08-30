@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<import>
+<?php
+	foreach ($docs as $doc) { 
+?>
+	<node type="document" action="create">
+		<location>Enterprise:Import Folder</location>
+		<file><![CDATA[<?php echo $doc['filename']; ?>]]></file>
+	</node>
+<?php
+	}
+?>
+</import>

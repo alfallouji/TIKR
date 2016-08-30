@@ -13,6 +13,7 @@ return array(
 
     // TME related settings
     'tme' => array(
+        'openCalais' => 'TlRQ05J2hfKZs4FCzvyA9bhUNrU7Whm1',
         'alchemyApi' => '',
         'mimeTypes' => array(
         ),

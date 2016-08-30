@@ -12,7 +12,13 @@ $facets['fields'][] = array('field' => 'applicationName');
 $facets['fields'][] = array('field' => 'company');
 $facets['fields'][] = array('field' => 'author');
 $facets['fields'][] = array('field' => 'customTags');
-$facets['fields'][] = array('field' => 'fingerprint', 'minCount' => 2);
+
+//$facets['fields'][] = array('field' => 'entities');
+$facets['fields'][] = array('field' => 'socialTags');
+$facets['fields'][] = array('field' => 'industry');
+$facets['fields'][] = array('field' => 'topics');
+
+// $facets['fields'][] = array('field' => 'fingerprint', 'minCount' => 2);
 
 // Facets for Date related fields 
 $facets['date'] = array('start' => '2000-01-01T01:01:01Z', 'end' => 'NOW', 'gap' => '%2B6MONTH');

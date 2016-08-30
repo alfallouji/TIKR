@@ -4,10 +4,12 @@ namespace Tikr\Tika\Client;
 class Rest
 {
     protected $_tikaUrl = null;
+    protected $_tikaPath = null;
 
     public function __construct($tikaUrl)
     {
         $this->_tikaUrl = $tikaUrl;
+        $this->_tikaPath = '/var/www/apps/tika/tika-app.jar';
     }
 
     public function getMetadata($filename) 

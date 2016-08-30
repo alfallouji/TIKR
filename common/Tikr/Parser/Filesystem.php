@@ -50,7 +50,13 @@ class Filesystem extends Base {
                         $dirName = dirname($filename);
                         $baseName = basename($filename);
                         $result[$dirName][$baseName] = $this->generateWeakFingerprint($info);
-                        $this->_manifests[$dirName] = array_merge($this->_manifests[$dirName], array($baseName => $result[$dirName][$baseName]));
+
+                        $manifestDirName = is_array($this->_manifests[$dirName]) ? $this->_manifests[$dirName] : array();
+                        $this->_manifests[$dirName] = array_merge(
+                            $manifestDirName, 
+                            array($baseName => $result[$dirName][$baseName])
+                        );
+
                         $this->generateManifest(array($dirName => $this->_manifests[$dirName]));
 
                         echo '}';
@@ -97,7 +103,11 @@ class Filesystem extends Base {
         $tmpFilename = $this->createCacheFile($filename);
         echo ' {.';
         $data = $this->_metadataExtractor->getMetadata($tmpFilename);
+
         echo empty($data['metadata']) ? 'X' : '.';
+        if (empty($data['metadata'])) { 
+            $data['metadata'] = array();
+        }
 
         $object = new \StdClass();
         foreach ($this->_fieldsMapping as $k1 => $k2) {
@@ -110,6 +120,41 @@ class Filesystem extends Base {
             } 
         }
 
+        foreach ($data['metadata'] as $key => $value) {
+            if (!in_array($key, $this->_fieldsMapping)) {
+                
+                if (is_array($value)) {
+                    $keyName = 'attr_' . $key;
+                    $object->$keyName = $value;
+                    continue;
+                }
+
+                switch(\Tikr\Helper\Type::getType($value)) {
+                    case 'string':
+                        $keyName = $key . '_s';
+                    break;
+
+                    case 'integer':
+                        $keyName = $key . '_i';
+                    break;
+
+                    case 'datetime':
+                        $keyName = $key . '_dts';
+                    break;
+
+                    case 'boolean':
+                        $keyName = $key . '_b';
+                    break;
+
+                    case 'float':
+                        $keyName = $key . '_f';
+                    break;
+                }
+
+                $object->$keyName = $value;
+            }
+        }
+
         $object->filename = $filename;
         $object->solrDocumentId = md5($filename);
         $object->customTags = $customTags;
@@ -117,7 +162,7 @@ class Filesystem extends Base {
         $object->contentLength = filesize($tmpFilename);
 
         if ($mineText) {
-            $text = $this->getText($tmpFilename);
+            $text = $this->_metadataExtractor->getText($tmpFilename);
     /**
      * disambiguate -> disambiguate entities (i.e. Apple the company vs. apple the fruit). 0: disabled, 1: enabled (default)
      * linkedData -> include linked data on disambiguated entities. 0: disabled, 1: enabled (default) 
@@ -127,12 +172,16 @@ class Filesystem extends Base {
      * showSourceText -> 0: disabled (default), 1: enabled 
      * maxRetrieve -> the maximum number of entities to retrieve (default: 50)
      */
-            $entities = $this->_tme->entities('text', $text, array('maxRetrieve' => 50));
-            // @todo : complete this 
+            $metadata = $this->_tme->getEntities($text);
+
+            $object->entities = isset($metadata['entities']) ? $metadata['entities'] : null;
+            $object->topics = isset($metadata['topics']) ? $metadata['topics'] : null;
+            $object->industry = isset($metadata['industry']) ? $metadata['industry'] : null;
+            $object->socialTags = isset($metadata['socialTags']) ? $metadata['socialTags'] : null;
         }
 
         $result = $this->_solr->indexObject($object);
-        echo ($result) ? 'S' : '-S-';
+        echo ($result) ? '.' : 'X';
         unlink($tmpFilename);
         
         return $result;
@@ -153,7 +202,7 @@ class Filesystem extends Base {
             }
             $content = '<?php ' . PHP_EOL . ' // Generated at ' . date('Y-m-d H:i:s') . PHP_EOL . 'return ' . var_export($files, true) . ';';
             file_put_contents($folder . DIRECTORY_SEPARATOR . 'manifest.php', $content);
-            echo 'M';
+            echo '.';
         }
     }
 
